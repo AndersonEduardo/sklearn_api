@@ -1,0 +1,38 @@
+service: test-sklearn-api
+
+provider:
+  name: aws
+  # Provide additional permissions to access S3
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action: s3:GetObject
+          Resource: arn:aws:s3:::api-linhas-de-cuidado/*
+  runtime: python3.8
+  # lambdaHashingVersion: 20221101
+  region: us-east-1
+  # Set the stage to develop unless the --stage option is passed
+  stage: dev
+
+functions:
+  # Holds the lambda for health checks and status reports
+  health:
+    handler: health/handler.lambda_handler
+    events:
+      - http:
+          path: health
+          method: GET
+  cogsys:
+    handler: cogsys/handler.lambda_handler
+    layers:
+      - arn:aws:lambda:us-east-1:446751924810:layer:python-3-8-scikit-learn-0-23-1:2
+    events:
+      - http:
+          path: cogsys
+          method: POST
+          # This indicates that the api endpoint requires a key.
+          # private: true
+
+# plugins:
+#   - serverless-python-requirements
